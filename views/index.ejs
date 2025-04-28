@@ -8,79 +8,243 @@
     <style>
         body {
             font-family: Arial, sans-serif;
+            line-height: 1.6;
             margin: 0;
-            padding: 0;
-            background-color: #f4f4f4;
-        }
-        
-        .container {
-            width: 80%;
-            margin: 30px auto;
-            background: white;
             padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            color: #333;
         }
         
-        header {
+        .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding-bottom: 20px;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid #ddd;
             margin-bottom: 20px;
         }
         
         .welcome {
-            font-size: 18px;
-        }
-        
-        .username {
-            color: #007bff;
-            font-weight: bold;
+            font-size: 1.2em;
         }
         
         .logout {
-            background: #dc3545;
+            background-color: #f44336;
             color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 4px;
-            cursor: pointer;
+            padding: 8px 16px;
             text-decoration: none;
-            display: inline-block;
+            border-radius: 4px;
+            font-weight: bold;
         }
         
-        .content {
-            line-height: 1.6;
+        .logout:hover {
+            background-color: #d32f2f;
+        }
+        
+        h1,
+        h2,
+        h3 {
+            color: #2c3e50;
+        }
+        
+        ul {
+            padding-left: 20px;
+        }
+        
+        .favorites-section {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        
+        .add-favorite {
+            margin-bottom: 20px;
+        }
+        
+        input[type="text"] {
+            padding: 8px;
+            width: 300px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        button {
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        #favoritesList {
+            list-style-type: none;
+            padding: 0;
+        }
+        
+        #favoritesList li {
+            padding: 10px;
+            margin: 5px 0;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
         }
     </style>
 </head>
 
 <body>
-    <div class="container">
-        <header>
-            <div class="welcome">Welcome, <span class="username"><%= username %></span>!</div>
-            <a href="/logout" class="logout">Logout</a>
-        </header>
-
-        <div class="content">
-            <h1>Dashboard</h1>
-            <p>This is your protected dashboard page. Only authenticated users can see this content.</p>
-            <p>You are currently logged in as <strong><%= username %></strong>.</p>
-
-            <h2>Protected Content</h2>
-            <p>This section contains sensitive information that only authenticated users should access.</p>
-
-            <h2>What you can do</h2>
-            <p>Now that you're logged in, you can:</p>
-            <ul>
-                <li>Access your personal information</li>
-                <li>View and manage your account settings</li>
-                <li>Interact with other parts of the application</li>
-            </ul>
-        </div>
+    <div class="header">
+        <div class="welcome">Welcome,
+            <%= username %>!</div>
+        <a href="/logout" class="logout">Logout</a>
     </div>
+
+    <h1>Dashboard</h1>
+    <p>This is your protected dashboard page. Only authenticated users can see this content.</p>
+    <p>You are currently logged in as <strong><%= username %></strong>.</p>
+
+    <h2>Protected Content</h2>
+    <p>This section contains sensitive information that only authenticated users should access.</p>
+
+    <h2>What you can do</h2>
+    <p>Now that you're logged in, you can:</p>
+    <ul>
+        <li>Access your personal information</li>
+        <li>View and manage your account settings</li>
+        <li>Interact with other parts of the application</li>
+    </ul>
+
+    <!-- Favorites Section -->
+    <div class="favorites-section">
+        <h2>My Favorites</h2>
+
+        <div class="add-favorite">
+            <label for="favoriteInput">Add a new favorite:</label>
+            <input type="text" id="favoriteInput" placeholder="Enter favorite">
+            <button onclick="addFavorite()">Add</button>
+        </div>
+
+        <h3>Your Favorites:</h3>
+        <ul id="favoritesList">
+            <!-- Favorites will be loaded here -->
+            <li>Loading your favorites...</li>
+        </ul>
+    </div>
+
+    <h1>Favorites List</h1>
+    <ul id="favorites-list"></ul>
+
+    <h1>Timeline</h1>
+    <ul id="timeline-list"></ul>
+
+    <script>
+        const fetchFavorites = () =>
+            fetch("/favorites", {
+                method: "GET"
+            })
+            .then((response) => response.json())
+            .then((data) => {
+                const favoritesList = document.getElementById("favorites-list");
+                favoritesList.innerHTML = ""; // Clear the list before adding new items
+                data.forEach((favorite) => {
+                    const li = document.createElement("li");
+                    li.textContent = favorite.name;
+                    favoritesList.appendChild(li);
+                });
+            })
+            .catch((error) => console.error("Error fetching favorites:", error));
+
+        // Fetch 10 random Pokémon from the PokeAPI
+        fetch("https://pokeapi.co/api/v2/pokemon?limit=10")
+            .then((response) => response.json())
+            .then((data) => {
+                const pokemonList = document.createElement("div");
+                pokemonList.innerHTML = "<h2>Add a Pokémon to Favorites:</h2>";
+
+                data.results.forEach((pokemon) => {
+                    const button = document.createElement("button");
+                    button.textContent = pokemon.name;
+                    button.style.margin = "5px";
+                    button.addEventListener("click", () => {
+                        const pokemonName = pokemon.name;
+                        fetch(`/addFavorite/${pokemonName}`, {
+                                method: "GET"
+                            })
+                            .then((response) => {
+                                if (response.ok) {
+                                    alert(`${pokemonName} added to favorites!`);
+                                    fetchFavorites();
+                                    fetchTimeline();
+                                } else {
+                                    alert(`Failed to add ${pokemonName} to favorites.`);
+                                }
+                            })
+                            .catch((error) =>
+                                console.error("Error adding favorite:", error)
+                            );
+                    });
+                    pokemonList.appendChild(button);
+                });
+
+                document.body.appendChild(pokemonList);
+            })
+            .catch((error) => console.error("Error fetching Pokémon:", error));
+
+        fetchFavorites();
+
+        const fetchTimeline = () =>
+            fetch("/timeline", {
+                method: "GET"
+            })
+            .then((response) => response.json())
+            .then((data) => {
+                const timelineList = document.getElementById("timeline-list");
+                timelineList.innerHTML = ""; // Clear the list before adding new items
+                data.forEach((event) => {
+                    const li = document.createElement("li");
+                    li.innerHTML = `
+              <strong>${event.title}</strong>: ${event.description} <em>${event.date}</em>`;
+                    timelineList.appendChild(li);
+                });
+            })
+            .catch((error) => console.error("Error fetching timeline:", error));
+
+        fetchTimeline();
+
+        // Function to add a new favorite
+        function addFavorite() {
+            const favoriteInput = document.getElementById("favoriteInput");
+            const favorite = favoriteInput.value.trim();
+
+            if (!favorite) {
+                alert('Please enter a favorite to add.');
+                return;
+            }
+
+            fetch(`/addFavorite/${encodeURIComponent(favorite)}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Favorite added:', data);
+                    favoriteInput.value = ''; // Clear input field
+                    fetchFavorites(); // Reload the favorites list
+                    fetchTimeline(); // Reload the timeline
+                })
+                .catch(error => {
+                    console.error('Error adding favorite:', error);
+                    alert('Could not add favorite. Please try again later.');
+                });
+        }
+    </script>
 </body>
 
 </html>
