@@ -9,22 +9,27 @@
 </head>
 
 <body>
-    <h1>Pokemon List</h1>
-    <ul id="pokemon-list"></ul>
-    <script>
-        // fetch pokemon from poke API
-        fetch("https://pokeapi.co/api/v2/pokemon?limit=10")
-            .then((response) => response.json())
-            .then((data) => {
-                const pokemonList = document.getElementById("pokemon-list");
-                data.results.forEach((pokemon) => {
-                    const li = document.createElement("li");
-                    li.innerText = pokemon.name;
-                    pokemonList.appendChild(li);
-                });
-            })
-            .catch((error) => console.error("Error fetching Pokémon:", error));
-    </script>
+    <div class="pokedex">
+        <div class="screen-left">
+            <h1>Pokemon List</h1>
+        </div>
+        <ul id="pokemon-list">
+        </ul>
+        <script>
+            // fetch pokemon from poke API
+            fetch("https://pokeapi.co/api/v2/pokemon?limit=10")
+                .then((response) => response.json())
+                .then((data) => {
+                    const pokemonList = document.getElementById("pokemon-list");
+                    data.results.forEach((pokemon) => {
+                        const li = document.createElement("li");
+                        li.innerText = pokemon.name;
+                        pokemonList.appendChild(li);
+                    });
+                })
+                .catch((error) => console.error("Error fetching Pokémon:", error));
+        </script>
+    </div>
 </body>
 
 </html>
