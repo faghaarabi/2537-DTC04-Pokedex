@@ -1,0 +1,24 @@
+{
+  "name": "2537-dtc04-pokedex",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/crombout89/2537-DTC04-Pokedex.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/crombout89/2537-DTC04-Pokedex/issues"
+  },
+  "homepage": "https://github.com/crombout89/2537-DTC04-Pokedex#readme",
+  "description": "",
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}
