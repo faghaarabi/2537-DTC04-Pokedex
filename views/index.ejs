@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        
+        .container {
+            width: 80%;
+            margin: 30px auto;
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 20px;
+        }
+        
+        .welcome {
+            font-size: 18px;
+        }
+        
+        .username {
+            color: #007bff;
+            font-weight: bold;
+        }
+        
+        .logout {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .content {
+            line-height: 1.6;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <div class="welcome">Welcome, <span class="username"><%= username %></span>!</div>
+            <form action="/logout" method="POST">
+                <button type="submit" class="logout">Logout</button>
+            </form>
+        </header>
+
+        <div class="content">
+            <h1>Dashboard</h1>
+            <p>This is your protected dashboard page. Only authenticated users can see this content.</p>
+            <p>You are currently logged in as <strong><%= username %></strong>.</p>
+
+            <h2>Protected Content</h2>
+            <p>This section contains sensitive information that only authenticated users should access.</p>
+
+            <h2>What you can do</h2>
+            <p>Now that you're logged in, you can:</p>
+            <ul>
+                <li>Access your personal information</li>
+                <li>View and manage your account settings</li>
+                <li>Interact with other parts of the application</li>
+            </ul>
+        </div>
+    </div>
+</body>
+
+</html>

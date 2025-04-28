@@ -1,23 +1,28 @@
-const express = require("express");
-const app = express();
-const PORT = 3000;
+const express = require('express');
+var session = require('express-session')
 
-// Set EJS as the view engine
-app.set('view engine', 'ejs');
+const app = express();
+
+app.use(session({
+    secret: 'keyboard cat',
+    resave: true,
+    saveUninitialized: true,
+    cookie: { secure: false }
+}))
+
+const port = 3000;
+
+app.set('view engine', 'ejs')
 
 // Serve static files from the current directory
 app.use(express.static(__dirname));
 
-app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
+app.listen(port, () => {
+    console.log(`Server is running on http://localhost:${port}`);
 });
 
 app.get('/', (req, res) => {
     res.redirect('/home');
-})
-
-app.get('/home', (req, res) => {
-    res.sendFile(__dirname + '/index.html');
 })
 
 app.get('/login', (req, res) => {
@@ -38,8 +43,23 @@ app.post('/login', (req, res) => {
     const user = usersArr.find(user => user.username === username && user.password === password);
 
     if (user) {
-        res.render('home.ejs', { username: user.username });
+        req.session.user = user;
+        res.render('index.ejs', { username: user.username });
     } else {
         res.status(401).send('Invalid credentials');
     }
+})
+
+const isAuthenticated = (req, res, next) => {
+    if (req.session && req.session.user) {
+        return next();
+    } else {
+        res.redirect('/login');
+    }
+}
+
+app.use(isAuthenticated);
+app.get('/home', (req, res) => {
+    // res.sendFile(__dirname + '/index.html');
+    res.render('index.ejs', { username: req.session.user.username });
 })
