@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .welcome-message {
+            color: #4a4a4a;
+            margin-bottom: 20px;
+        }
+        
+        .username {
+            color: #007bff;
+            font-weight: bold;
+        }
+        
+        .logout-btn {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Welcome to the Home Page</h1>
+
+        <div class="welcome-message">
+            Hello, <span class="username"><%= username %></span>! You've successfully logged in.
+        </div>
+
+        <p>This is a simple EJS template that shows how to use variables passed from your Express server.</p>
+
+        <p>The username variable from your server is: <strong><%= username %></strong></p>
+
+        <a href="/login"><button class="logout-btn">Logout</button></a>
+    </div>
+</body>
+
+</html>
