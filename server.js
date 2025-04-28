@@ -63,3 +63,14 @@ app.get('/home', (req, res) => {
     // res.sendFile(__dirname + '/index.html');
     res.render('index.ejs', { username: req.session.user.username });
 })
+
+app.get('/logout', (req, res) => {
+    // Destroy the session
+    req.session.destroy(err => {
+        if (err) {
+            return res.redirect('/home'); // Error handling
+        }
+        res.clearCookie('connect.sid'); // Clear the session cookie
+        res.redirect('/login'); // Redirect to login page
+    });
+});

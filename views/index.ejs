@@ -47,6 +47,8 @@
             padding: 8px 15px;
             border-radius: 4px;
             cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
         }
         
         .content {
@@ -59,9 +61,7 @@
     <div class="container">
         <header>
             <div class="welcome">Welcome, <span class="username"><%= username %></span>!</div>
-            <form action="/logout" method="POST">
-                <button type="submit" class="logout">Logout</button>
-            </form>
+            <a href="/logout" class="logout">Logout</a>
         </header>
 
         <div class="content">
