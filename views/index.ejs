@@ -1,217 +1,262 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            margin: 0;
-            padding: 20px;
-            color: #333;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      margin: 0;
+      padding: 0;
+      color: #333;
+    }
 
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding-bottom: 20px;
-            border-bottom: 1px solid #ddd;
-            margin-bottom: 20px;
-        }
+    .navbar {
+      background-color: #4CAF50;
+      padding: 15px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
 
-        .welcome {
-            font-size: 1.2em;
-        }
+    .navbar-title {
+      font-size: 24px;
+      color: white;
+      font-weight: bold;
+      text-decoration: none;
+    }
 
-        .logout {
-            background-color: #f44336;
-            color: white;
-            padding: 8px 16px;
-            text-decoration: none;
-            border-radius: 4px;
-            font-weight: bold;
-        }
+    .logout {
+      background-color: #f44336;
+      color: white;
+      padding: 8px 16px;
+      text-decoration: none;
+      border-radius: 4px;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+    }
 
-        .logout:hover {
-            background-color: #d32f2f;
-        }
+    .logout:hover {
+      background-color: #d32f2f;
+    }
 
-        h1, h2, h3 {
-            color: #2c3e50;
-        }
+    main {
+      padding: 20px;
+    }
 
-        ul {
-            padding-left: 0;
-        }
+    h1, h2, h3 {
+      color: #2c3e50;
+    }
 
-        li {
-            padding: 10px;
-            margin: 5px 0;
-            background-color: #f9f9f9;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+    ul {
+      padding-left: 0;
+    }
 
-        input[type="text"] {
-            padding: 8px;
-            width: 300px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
+    li {
+      padding: 10px;
+      margin: 5px 0;
+      background-color: #f9f9f9;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
 
-        button {
-            padding: 8px 16px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-left: 10px;
-        }
+    input[type="text"] {
+      padding: 8px;
+      width: 300px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
 
-        button:hover {
-            background-color: #45a049;
-        }
+    button {
+      padding: 8px 16px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-left: 10px;
+    }
 
-        #pokemon-section ul {
-            list-style-type: none;
-            padding: 0;
-        }
+    button:hover {
+      background-color: #45a049;
+    }
 
-        #pokemon-section ul li {
-            margin-bottom: 10px;
-        }
-    </style>
+    #pokemon-section ul {
+      list-style-type: none;
+      padding: 0;
+    }
+
+    #pokemon-section ul li {
+      margin-bottom: 10px;
+    }
+
+    #pokemon-section ul li button {
+      width: 100%;
+      display: block;
+      text-align: center;
+    }
+  </style>
 </head>
 
 <body>
-    <div class="header">
-        <div class="welcome">Welcome, <%= username %>!</div>
-        <a href="/logout" class="logout">Logout</a>
-    </div>
+  <div class="navbar">
+    <a href="/home" class="navbar-title">My Dashboard</a>
+    <a href="/logout" class="logout">Logout</a>
+  </div>
 
+  <main>
     <h1>Dashboard</h1>
     <p>This is your protected dashboard page. Only authenticated users can see this content.</p>
     <p>You are currently logged in as <strong><%= username %></strong>.</p>
 
-    <!-- Pokémon Section (Top) -->
     <div id="pokemon-section">
-        <h2>Add a Pokémon to Favorites:</h2>
+      <h2>Add a Pokémon to Favorites:</h2>
     </div>
 
-    <!-- Favorites Section (Middle) -->
     <h2>Favorites List</h2>
     <ul id="favorites-list"></ul>
 
-    <!-- Timeline Section (Bottom) -->
     <h2>Timeline</h2>
     <ul id="timeline-list"></ul>
+  </main>
 
-    <script>
-        const fetchFavorites = () =>
-            fetch("/favorites", { method: "GET" })
-                .then(response => response.json())
-                .then(data => {
-                    const favoritesList = document.getElementById("favorites-list");
-                    favoritesList.innerHTML = "";
-                    data.forEach(favorite => {
-                        const li = document.createElement("li");
-                        li.textContent = favorite.name;
-                        favoritesList.appendChild(li);
-                    });
-                })
-                .catch(error => console.error("Error fetching favorites:", error));
+  <script>
+    let currentFavorites = [];
 
-        const fetchTimeline = () =>
-            fetch("/timeline", { method: "GET" })
-                .then(response => response.json())
-                .then(data => {
-                    const timelineList = document.getElementById("timeline-list");
-                    timelineList.innerHTML = "";
+    const fetchFavorites = () =>
+      fetch("/favorites", { method: "GET" })
+        .then(response => response.json())
+        .then(data => {
+          currentFavorites = data.map(fav => fav.name.toLowerCase());
+          const favoritesList = document.getElementById("favorites-list");
+          favoritesList.innerHTML = "";
+          data.forEach(favorite => {
+            const li = document.createElement("li");
+            li.textContent = favorite.name;
+            favoritesList.appendChild(li);
+          });
 
-                    data.forEach(event => {
-                        const li = document.createElement("li");
-                        li.innerHTML = `
-                            <div style="flex: 1;">
-                                <strong>${event.title}</strong>: ${event.description}
-                                <br><small>${new Date(event.date).toLocaleString()}</small>
-                            </div>
-                        `;
-                        const deleteButton = document.createElement("button");
-                        deleteButton.textContent = "Delete";
-                        deleteButton.onclick = () => deleteTimeline(event._id);
+          // After favorites are ready, load Pokémon
+          fetchPokemonList();
+        })
+        .catch(error => console.error("Error fetching favorites:", error));
 
-                        li.appendChild(deleteButton);
-                        timelineList.appendChild(li);
-                    });
-                })
-                .catch(error => console.error("Error fetching timeline:", error));
+    const fetchTimeline = () =>
+      fetch("/timeline", { method: "GET" })
+        .then(response => response.json())
+        .then(data => {
+          const timelineList = document.getElementById("timeline-list");
+          timelineList.innerHTML = "";
 
-        const deleteTimeline = (id) => {
-            if (confirm("Are you sure you want to delete this entry?")) {
-                fetch(`/deleteTimeline/${id}`, { method: "POST" })
-                    .then(response => response.json())
-                    .then(result => {
-                        if (result.success) {
-                            fetchTimeline();
-                        } else {
-                            alert("Failed to delete entry.");
-                        }
-                    })
-                    .catch(error => {
-                        console.error("Error deleting entry:", error);
-                        alert("An error occurred while deleting the entry.");
-                    });
+          data.forEach(event => {
+            const li = document.createElement("li");
+            li.innerHTML = `
+              <div style="flex: 1;">
+                <strong>${event.title}</strong>: ${event.description}
+                <br><small>${new Date(event.date).toLocaleString()}</small>
+              </div>
+            `;
+            const deleteButton = document.createElement("button");
+            deleteButton.textContent = "Delete";
+            deleteButton.onclick = () => deleteTimeline(event._id);
+
+            li.appendChild(deleteButton);
+            timelineList.appendChild(li);
+          });
+        })
+        .catch(error => console.error("Error fetching timeline:", error));
+
+    const deleteTimeline = (id) => {
+      if (confirm("Are you sure you want to delete this entry?")) {
+        fetch(`/deleteTimeline/${id}`, { method: "POST" })
+          .then(response => response.json())
+          .then(result => {
+            if (result.success) {
+              fetchTimeline();
+            } else {
+              alert("Failed to delete entry.");
             }
-        };
+          })
+          .catch(error => {
+            console.error("Error deleting entry:", error);
+            alert("An error occurred while deleting the entry.");
+          });
+      }
+    };
 
-        // Load Pokémon list (Top) - Vertically
-        fetch("https://pokeapi.co/api/v2/pokemon?limit=10")
-            .then(response => response.json())
-            .then(data => {
-                const pokemonSection = document.getElementById("pokemon-section");
+    const fetchPokemonList = () => {
+      fetch("https://pokeapi.co/api/v2/pokemon?limit=10")
+        .then(response => response.json())
+        .then(data => {
+          const pokemonSection = document.getElementById("pokemon-section");
 
-                const pokemonList = document.createElement("ul");
-                pokemonList.style.listStyleType = "none";
-                pokemonList.style.padding = "0";
+          const pokemonList = document.createElement("ul");
+          pokemonList.style.listStyleType = "none";
+          pokemonList.style.padding = "0";
 
-                data.results.forEach(pokemon => {
-                    const li = document.createElement("li");
-                    li.style.marginBottom = "10px";
+          data.results.forEach(pokemon => {
+            const li = document.createElement("li");
+            li.style.marginBottom = "10px";
 
-                    const button = document.createElement("button");
-                    button.textContent = pokemon.name;
-                    button.addEventListener("click", () => {
-                        const pokemonName = pokemon.name;
-                        fetch(`/addFavorite/${pokemonName}`, { method: "GET" })
-                            .then(response => {
-                                if (response.ok) {
-                                    alert(`${pokemonName} added to favorites!`);
-                                    fetchFavorites();
-                                    fetchTimeline();
-                                } else {
-                                    alert(`Failed to add ${pokemonName} to favorites.`);
-                                }
-                            })
-                            .catch(error => console.error("Error adding favorite:", error));
-                    });
+            const button = document.createElement("button");
+            button.textContent = pokemon.name;
 
-                    li.appendChild(button);
-                    pokemonList.appendChild(li);
-                });
+            if (currentFavorites.includes(pokemon.name.toLowerCase())) {
+              button.disabled = true;
+              button.style.backgroundColor = "#ccc";
+              button.style.cursor = "not-allowed";
+            }
 
-                pokemonSection.appendChild(pokemonList);
-            })
-            .catch(error => console.error("Error fetching Pokémon:", error));
+            button.addEventListener("click", () => {
+              const pokemonName = pokemon.name.toLowerCase();
 
-        fetchFavorites();
-        fetchTimeline();
-    </script>
+              if (currentFavorites.includes(pokemonName)) {
+                alert(`${pokemon.name} is already in your favorites!`);
+                button.disabled = true;
+                button.style.backgroundColor = "#ccc";
+                button.style.cursor = "not-allowed";
+                return;
+              }
+
+              fetch(`/addFavorite/${pokemonName}`, { method: "GET" })
+                .then(response => {
+                  if (response.ok) {
+                    alert(`${pokemon.name} added to favorites!`);
+                    currentFavorites.push(pokemonName);
+                    button.disabled = true;
+                    button.style.backgroundColor = "#ccc";
+                    button.style.cursor = "not-allowed";
+                    fetchFavorites();
+                    fetchTimeline();
+                  } else {
+                    alert(`Failed to add ${pokemon.name} to favorites.`);
+                  }
+                })
+                .catch(error => console.error("Error adding favorite:", error));
+            });
+
+            li.appendChild(button);
+            pokemonList.appendChild(li);
+          });
+
+          pokemonSection.appendChild(pokemonList);
+        })
+        .catch(error => console.error("Error fetching Pokémons:", error));
+    };
+
+    fetchFavorites();
+    fetchTimeline();
+  </script>
 </body>
+
 </html>
