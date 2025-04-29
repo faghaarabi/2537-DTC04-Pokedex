@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -45,7 +44,7 @@
         }
 
         ul {
-            padding-left: 20px;
+            padding-left: 0;
         }
 
         li {
@@ -78,6 +77,15 @@
 
         button:hover {
             background-color: #45a049;
+        }
+
+        #pokemon-section ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        #pokemon-section ul li {
+            margin-bottom: 10px;
         }
     </style>
 </head>
@@ -163,16 +171,22 @@
             }
         };
 
-        // Load Pokémon list (at top)
+        // Load Pokémon list (Top) - Vertically
         fetch("https://pokeapi.co/api/v2/pokemon?limit=10")
             .then(response => response.json())
             .then(data => {
                 const pokemonSection = document.getElementById("pokemon-section");
 
+                const pokemonList = document.createElement("ul");
+                pokemonList.style.listStyleType = "none";
+                pokemonList.style.padding = "0";
+
                 data.results.forEach(pokemon => {
+                    const li = document.createElement("li");
+                    li.style.marginBottom = "10px";
+
                     const button = document.createElement("button");
                     button.textContent = pokemon.name;
-                    button.style.margin = "5px";
                     button.addEventListener("click", () => {
                         const pokemonName = pokemon.name;
                         fetch(`/addFavorite/${pokemonName}`, { method: "GET" })
@@ -187,8 +201,12 @@
                             })
                             .catch(error => console.error("Error adding favorite:", error));
                     });
-                    pokemonSection.appendChild(button);
+
+                    li.appendChild(button);
+                    pokemonList.appendChild(li);
                 });
+
+                pokemonSection.appendChild(pokemonList);
             })
             .catch(error => console.error("Error fetching Pokémon:", error));
 
