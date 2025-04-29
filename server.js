@@ -1,6 +1,7 @@
 const express = require('express');
 var session = require('express-session')
 const mongoose = require('mongoose');
+const { ObjectId } = require('mongoose').Types;
 
 const favoritesSchema = new mongoose.Schema({
     name: String,
@@ -18,6 +19,9 @@ const timelineSchema = new mongoose.Schema({
 const timelineModel = mongoose.model('timeline', timelineSchema);
 
 const app = express();
+
+// Add JSON middleware for parsing JSON request bodies
+app.use(express.json());
 
 app.use(session({
     secret: 'keyboard cat',
@@ -179,6 +183,25 @@ const addToTimeline = async(title, description, date, username) => {
         return null;
     }
 };
+
+// DELETE Timeline entry route
+app.post('/deleteTimeline/:id', async (req, res) => {
+    try {
+        if (mongoose.connection.readyState !== 1) {
+            console.log('MongoDB is not connected. Cannot delete timeline entry.');
+            return res.status(503).json({ error: 'Database not available' });
+        }
+
+        const id = req.params.id;
+
+        await timelineModel.deleteOne({ _id: new ObjectId(id), username: req.session.user.username });
+        res.json({ success: true });
+    } catch (error) {
+        console.log('Database error when deleting timeline:', error);
+        res.status(500).json({ error: 'Could not delete timeline entry' });
+    }
+});
+
 
 // Handle any uncaught errors
 process.on('uncaughtException', (err) => {
