@@ -203,14 +203,14 @@
             deleteButton.onclick = () => deleteTimeline(event._id);
 
             li.appendChild(deleteButton);
-            timelineList.appendChild(li);
+            timelineList.prepend(li);
           });
         })
         .catch(error => console.error("Error fetching timeline:", error));
 
     const deleteTimeline = (id) => {
       if (confirm("Are you sure you want to delete this entry?")) {
-        fetch(`/deleteTimeline/${id}`, { method: "POST" })
+        fetch(`/deleteTimeline/${id}`, { method: "DELETE" })
           .then(response => response.json())
           .then(result => {
             if (result.success) {

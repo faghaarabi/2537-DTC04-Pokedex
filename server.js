@@ -34,6 +34,7 @@ const port = 3000;
 
 app.set('view engine', 'ejs');
 app.use(express.static(__dirname));
+app.use(express.urlencoded({ extended: true }));
 
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
@@ -56,14 +57,6 @@ async function connectToMongoDB() {
 
 connectToMongoDB();
 
-app.get('/', (req, res) => {
-    res.redirect('/home');
-});
-
-app.get('/login', (req, res) => {
-    res.sendFile(__dirname + '/login.html');
-});
-
 const usersArr = [
     { username: 'admin1', password: 'admin1' },
     { username: 'admin2', password: 'admin2' },
@@ -72,7 +65,13 @@ const usersArr = [
     { username: 'user3', password: 'password3' }
 ];
 
-app.use(express.urlencoded({ extended: true }));
+app.get('/', (req, res) => {
+    res.redirect('/home');
+});
+
+app.get('/login', (req, res) => {
+    res.sendFile(__dirname + '/login.html');
+});
 
 app.post('/login', (req, res) => {
     const { username, password } = req.body;
@@ -103,7 +102,7 @@ const isAuthenticated = (req, res, next) => {
     } else {
         res.redirect('/login');
     }
-}
+};
 
 app.use(isAuthenticated);
 
@@ -113,11 +112,6 @@ app.get('/home', (req, res) => {
 
 app.get('/favorites', async (req, res) => {
     try {
-        if (mongoose.connection.readyState !== 1) {
-            console.log('MongoDB is not connected. Cannot retrieve favorites.');
-            return res.json([]);
-        }
-
         const favoritesFound = await favoritesModel.find({ username: req.session.user.username });
         res.json(favoritesFound);
     } catch (error) {
@@ -128,11 +122,6 @@ app.get('/favorites', async (req, res) => {
 
 app.get('/addFavorite/:favorite', async (req, res) => {
     try {
-        if (mongoose.connection.readyState !== 1) {
-            console.log('MongoDB is not connected. Cannot add favorite.');
-            return res.status(503).json({ error: 'Database not available' });
-        }
-
         const favorite = req.params.favorite;
         const username = req.session.user.username;
 
@@ -147,25 +136,11 @@ app.get('/addFavorite/:favorite', async (req, res) => {
 
 app.delete('/deleteFavorite/:id', async (req, res) => {
     try {
-        if (mongoose.connection.readyState !== 1) {
-            console.log('MongoDB is not connected. Cannot delete favorite.');
-            return res.status(503).json({ error: 'Database not available' });
-        }
-
         const id = req.params.id;
         const username = req.session.user?.username;
 
-        console.log('Request to delete favorite ID:', id);
-        console.log('User session username:', username);
-
-        if (!username) {
-            return res.status(401).json({ error: 'User not authenticated' });
-        }
-
-        if (!ObjectId.isValid(id)) {
-            console.log('Invalid ObjectId:', id);
-            return res.status(400).json({ error: 'Invalid ID' });
-        }
+        if (!username) return res.status(401).json({ error: 'User not authenticated' });
+        if (!ObjectId.isValid(id)) return res.status(400).json({ error: 'Invalid ID' });
 
         const result = await favoritesModel.deleteOne({ _id: new ObjectId(id), username });
 
@@ -183,12 +158,10 @@ app.delete('/deleteFavorite/:id', async (req, res) => {
 
 app.get('/timeline', async (req, res) => {
     try {
-        if (mongoose.connection.readyState !== 1) {
-            console.log('MongoDB is not connected. Cannot retrieve timeline.');
-            return res.json([]);
-        }
+        const timelineFound = await timelineModel
+            .find({ username: req.session.user.username })
+    .sort({ date: -1 }); // -1 = descending, 1 = ascending
 
-        const timelineFound = await timelineModel.find({ username: req.session.user.username });
         res.json(timelineFound);
     } catch (error) {
         console.log('Database error:', error);
@@ -196,13 +169,29 @@ app.get('/timeline', async (req, res) => {
     }
 });
 
-const addToTimeline = async (title, description, date, username) => {
+app.delete('/deleteTimeline/:id', async (req, res) => {
     try {
-        if (mongoose.connection.readyState !== 1) {
-            console.log('MongoDB is not connected. Cannot add to timeline.');
-            return null;
+        const id = req.params.id;
+        const username = req.session.user?.username;
+
+        if (!username) return res.status(401).json({ error: 'User not authenticated' });
+        if (!ObjectId.isValid(id)) return res.status(400).json({ error: 'Invalid ID' });
+
+        const result = await timelineModel.deleteOne({ _id: new ObjectId(id), username });
+
+        if (result.deletedCount === 0) {
+            return res.status(404).json({ error: 'Timeline item not found or not owned by user' });
         }
 
+        res.json({ success: true });
+    } catch (error) {
+        console.log('Error deleting timeline item:', error.message);
+        res.status(500).json({ error: 'Could not delete timeline item', details: error.message });
+    }
+});
+
+const addToTimeline = async (title, description, date, username) => {
+    try {
         const result = await timelineModel.create({ title, description, date, username });
         return result;
     } catch (error) {
