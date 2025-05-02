@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Dashboard</title>
   <style>
+   
     body {
       font-family: Arial, sans-serif;
       line-height: 1.6;
@@ -105,8 +106,6 @@
       min-width: 120px;
       display: block;
       margin: 0 auto;
-
-    
     }
   </style>
 </head>
@@ -122,172 +121,200 @@
     <p>This is your protected dashboard page. Only authenticated users can see this content.</p>
     <p>You are currently logged in as <strong><%= username %></strong>.</p>
 
-    <div class="pokemon-container">
-      <div id="pokemon-section">
-        <h2>Add a Pokémon to Favorites:</h2>
+    <!-- conditional rendering -->
+    <% if (role == "admin") { %>
+      <h1>Admin Page</h1>
+      <p>Welcome, Admin!</p>
+      <p>Here is a list of all users:</p>
+      <ul id="user-list"></ul>
+    <% } else if (role == "user") { %>
+
+      <div class="pokemon-container">
+        <div id="pokemon-section">
+          <h2>Add a Pokémon to Favorites:</h2>
+        </div>
       </div>
-    </div>
 
-    <h2>Favorites List</h2>
-    <ul id="favorites-list"></ul>
+      <h2>Favorites List</h2>
+      <ul id="favorites-list"></ul>
 
-    <h2>Timeline</h2>
-    <ul id="timeline-list"></ul>
+      <h2>Timeline</h2>
+      <ul id="timeline-list"></ul>
+
+    <% } %>
   </main>
 
   <script>
-    let currentFavorites = [];
-
-    const fetchFavorites = () =>
-      fetch("/favorites", { method: "GET" })
-        .then(response => response.json())
-        .then(data => {
-          currentFavorites = data.map(fav => fav.name.toLowerCase());
-          const favoritesList = document.getElementById("favorites-list");
-          favoritesList.innerHTML = "";
-          data.forEach(favorite => {
+   
+    const role = "<%= role %>";
+    if (role === "admin") {
+      fetch("/users", { method: "GET" })
+        .then((response) => response.json())
+        .then((data) => {
+          const userList = document.getElementById("user-list");
+          data.forEach((user) => {
             const li = document.createElement("li");
-
-            const nameDiv = document.createElement("div");
-            nameDiv.textContent = favorite.name;
-
-            const deleteButton = document.createElement("button");
-            deleteButton.textContent = "Delete";
-            deleteButton.onclick = () => deleteFavorite(favorite._id);
-
-            li.appendChild(nameDiv);
-            li.appendChild(deleteButton);
-            favoritesList.appendChild(li);
-          });
-
-          renderPokemonButtons(); // only after favorites are loaded
-        })
-        .catch(error => console.error("Error fetching favorites:", error));
-
-    const deleteFavorite = (id) => {
-      if (confirm("Are you sure you want to delete this favorite?")) {
-        fetch(`/deleteFavorite/${id}`, {
-          method: "DELETE"
-        })
-        .then(response => response.json())
-        .then(result => {
-          if (result.success) {
-            fetchFavorites();
-            fetchTimeline();
-          } else {
-            alert("Failed to delete favorite.");
-          }
-        })
-        .catch(error => {
-          console.error("Error deleting favorite:", error);
-          alert("An error occurred while deleting the favorite.");
-        });
-      }
-    };
-
-    const fetchTimeline = () =>
-      fetch("/timeline", { method: "GET" })
-        .then(response => response.json())
-        .then(data => {
-          const timelineList = document.getElementById("timeline-list");
-          timelineList.innerHTML = "";
-
-          data.forEach(event => {
-            const li = document.createElement("li");
-            li.innerHTML = `
-              <div style="flex: 1;">
-                <strong>${event.title}</strong>: ${event.description}
-                <br><small>${new Date(event.date).toLocaleString()}</small>
-              </div>
-            `;
-            const deleteButton = document.createElement("button");
-            deleteButton.textContent = "Delete";
-            deleteButton.onclick = () => deleteTimeline(event._id);
-
-            li.appendChild(deleteButton);
-            timelineList.prepend(li);
+            li.innerText = user.username;
+            userList.appendChild(li);
           });
         })
-        .catch(error => console.error("Error fetching timeline:", error));
+        .catch((error) => console.error("Error fetching users:", error));
+    }
 
-    const deleteTimeline = (id) => {
-      if (confirm("Are you sure you want to delete this entry?")) {
-        fetch(`/deleteTimeline/${id}`, { method: "DELETE" })
+    if (role === "user") {
+      let currentFavorites = [];
+
+      const fetchFavorites = () =>
+        fetch("/favorites", { method: "GET" })
+          .then(response => response.json())
+          .then(data => {
+            currentFavorites = data.map(fav => fav.name.toLowerCase());
+            const favoritesList = document.getElementById("favorites-list");
+            favoritesList.innerHTML = "";
+            data.forEach(favorite => {
+              const li = document.createElement("li");
+
+              const nameDiv = document.createElement("div");
+              nameDiv.textContent = favorite.name;
+
+              const deleteButton = document.createElement("button");
+              deleteButton.textContent = "Delete";
+              deleteButton.onclick = () => deleteFavorite(favorite._id);
+
+              li.appendChild(nameDiv);
+              li.appendChild(deleteButton);
+              favoritesList.appendChild(li);
+            });
+
+            renderPokemonButtons();
+          })
+          .catch(error => console.error("Error fetching favorites:", error));
+
+      const deleteFavorite = (id) => {
+        if (confirm("Are you sure you want to delete this favorite?")) {
+          fetch(`/deleteFavorite/${id}`, {
+            method: "DELETE"
+          })
           .then(response => response.json())
           .then(result => {
             if (result.success) {
+              fetchFavorites();
               fetchTimeline();
             } else {
-              alert("Failed to delete entry.");
+              alert("Failed to delete favorite.");
             }
           })
           .catch(error => {
-            console.error("Error deleting entry:", error);
-            alert("An error occurred while deleting the entry.");
+            console.error("Error deleting favorite:", error);
+            alert("An error occurred while deleting the favorite.");
           });
-      }
-    };
+        }
+      };
 
-    const renderPokemonButtons = () => {
-      const pokemonSection = document.getElementById("pokemon-section");
-      pokemonSection.innerHTML = "<h2>Add a Pokémon to Favorites:</h2>";
+      const fetchTimeline = () =>
+        fetch("/timeline", { method: "GET" })
+          .then(response => response.json())
+          .then(data => {
+            const timelineList = document.getElementById("timeline-list");
+            timelineList.innerHTML = "";
 
-      fetch("https://pokeapi.co/api/v2/pokemon?limit=10")
-        .then(response => response.json())
-        .then(data => {
-          const pokemonList = document.createElement("ul");
+            data.forEach(event => {
+              const li = document.createElement("li");
+              li.innerHTML = `
+                <div style="flex: 1;">
+                  <strong>${event.title}</strong>: ${event.description}
+                  <br><small>${new Date(event.date).toLocaleString()}</small>
+                </div>
+              `;
+              const deleteButton = document.createElement("button");
+              deleteButton.textContent = "Delete";
+              deleteButton.onclick = () => deleteTimeline(event._id);
 
-          data.results.forEach(pokemon => {
-            const li = document.createElement("li");
+              li.appendChild(deleteButton);
+              timelineList.prepend(li);
+            });
+          })
+          .catch(error => console.error("Error fetching timeline:", error));
 
-            const button = document.createElement("button");
-            button.textContent = pokemon.name;
+      const deleteTimeline = (id) => {
+        if (confirm("Are you sure you want to delete this entry?")) {
+          fetch(`/deleteTimeline/${id}`, { method: "DELETE" })
+            .then(response => response.json())
+            .then(result => {
+              if (result.success) {
+                fetchTimeline();
+              } else {
+                alert("Failed to delete entry.");
+              }
+            })
+            .catch(error => {
+              console.error("Error deleting entry:", error);
+              alert("An error occurred while deleting the entry.");
+            });
+        }
+      };
 
-            if (currentFavorites.includes(pokemon.name.toLowerCase())) {
-              button.disabled = true;
-              button.style.backgroundColor = "#ccc";
-              button.style.cursor = "not-allowed";
-            }
+      const renderPokemonButtons = () => {
+        const pokemonSection = document.getElementById("pokemon-section");
+        pokemonSection.innerHTML = "<h2>Add a Pokémon to Favorites:</h2>";
 
-            button.addEventListener("click", () => {
-              const pokemonName = pokemon.name.toLowerCase();
+        fetch("https://pokeapi.co/api/v2/pokemon?limit=10")
+          .then(response => response.json())
+          .then(data => {
+            const pokemonList = document.createElement("ul");
 
-              if (currentFavorites.includes(pokemonName)) {
-                alert(`${pokemon.name} is already in your favorites!`);
+            data.results.forEach(pokemon => {
+              const li = document.createElement("li");
+
+              const button = document.createElement("button");
+              button.textContent = pokemon.name;
+
+              if (currentFavorites.includes(pokemon.name.toLowerCase())) {
                 button.disabled = true;
                 button.style.backgroundColor = "#ccc";
                 button.style.cursor = "not-allowed";
-                return;
               }
 
-              fetch(`/addFavorite/${pokemonName}`, { method: "GET" })
-                .then(response => {
-                  if (response.ok) {
-                    alert(`${pokemon.name} added to your favorites!`);
-                    currentFavorites.push(pokemonName);
-                    button.disabled = true;
-                    button.style.backgroundColor = "#ccc";
-                    button.style.cursor = "not-allowed";
-                    fetchFavorites();
-                    fetchTimeline();
-                  } else {
-                    alert(`Failed to add ${pokemon.name} to favorites.`);
-                  }
-                })
-                .catch(error => console.error("Error adding favorite:", error));
+              button.addEventListener("click", () => {
+                const pokemonName = pokemon.name.toLowerCase();
+
+                if (currentFavorites.includes(pokemonName)) {
+                  alert(`${pokemon.name} is already in your favorites!`);
+                  button.disabled = true;
+                  button.style.backgroundColor = "#ccc";
+                  button.style.cursor = "not-allowed";
+                  return;
+                }
+
+                fetch(`/addFavorite/${pokemonName}`, { method: "GET" })
+                  .then(response => {
+                    if (response.ok) {
+                      alert(`${pokemon.name} added to your favorites!`);
+                      currentFavorites.push(pokemonName);
+                      button.disabled = true;
+                      button.style.backgroundColor = "#ccc";
+                      button.style.cursor = "not-allowed";
+                      fetchFavorites();
+                      fetchTimeline();
+                    } else {
+                      alert(`Failed to add ${pokemon.name} to favorites.`);
+                    }
+                  })
+                  .catch(error => console.error("Error adding favorite:", error));
+              });
+
+              li.appendChild(button);
+              pokemonList.appendChild(li);
             });
 
-            li.appendChild(button);
-            pokemonList.appendChild(li);
-          });
+            pokemonSection.appendChild(pokemonList);
+          })
+          .catch(error => console.error("Error fetching Pokémon:", error));
+      };
 
-          pokemonSection.appendChild(pokemonList);
-        })
-        .catch(error => console.error("Error fetching Pokémon:", error));
-    };
-
-    fetchFavorites(); // will trigger Pokémon rendering after done
-    fetchTimeline();
+      fetchFavorites();
+      fetchTimeline();
+    }
   </script>
 </body>
 </html>

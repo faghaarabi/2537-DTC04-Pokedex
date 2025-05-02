@@ -5,7 +5,6 @@ const { ObjectId } = require('mongoose').Types;
 
 const app = express();
 
-// ====== MongoDB Schemas ======
 const favoritesSchema = new mongoose.Schema({
     name: String,
     username: String,
@@ -20,7 +19,17 @@ const timelineSchema = new mongoose.Schema({
 });
 const timelineModel = mongoose.model('timeline', timelineSchema);
 
-// ====== Middleware ======
+const userSchema = new mongoose.Schema({
+    username: String,
+    password: String,
+    role: {
+        type: String,
+        enum: ['admin', 'user'],
+        default: 'user'
+    }
+});
+const usersModel = mongoose.model('users', userSchema);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(session({
@@ -38,7 +47,6 @@ app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
 });
 
-// ====== Connect to MongoDB ======
 async function connectToMongoDB() {
     try {
         await mongoose.connect('mongodb://127.0.0.1:27017/test', {
@@ -52,7 +60,6 @@ async function connectToMongoDB() {
 }
 connectToMongoDB();
 
-// ====== Routes ======
 app.get('/', (req, res) => {
     res.redirect('/home');
 });
@@ -61,21 +68,14 @@ app.get('/login', (req, res) => {
     res.sendFile(__dirname + '/login.html');
 });
 
-app.post('/login', (req, res) => {
+app.post('/login', async (req, res) => {
     const { username, password } = req.body;
-    const usersArr = [
-        { username: 'admin1', password: 'admin1' },
-        { username: 'admin2', password: 'admin2' },
-        { username: 'user1', password: 'password1' },
-        { username: 'user2', password: 'password2' },
-        { username: 'user3', password: 'password3' }
-    ];
-    const user = usersArr.find(user => user.username === username && user.password === password);
+    const user = await usersModel.findOne({ username: username, password: password });
 
     if (user) {
         req.session.user = user;
         addToTimeline('Login', 'User logged in', new Date(), user.username);
-        res.render('index.ejs', { username: user.username });
+        res.redirect('/home');
     } else {
         res.status(401).send('Invalid credentials');
     }
@@ -93,11 +93,14 @@ const isAuthenticated = (req, res, next) => {
     if (req.session && req.session.user) return next();
     res.redirect('/login');
 };
+
 app.use(isAuthenticated);
 
-// ====== Home & Timeline ======
 app.get('/home', (req, res) => {
-    res.render('index.ejs', { username: req.session.user.username });
+    res.render('index', {
+        username: req.session.user.username,
+        role: req.session.user.role
+    });
 });
 
 app.get('/favorites', async (req, res) => {
@@ -175,10 +178,26 @@ const addToTimeline = async (title, description, date, username) => {
     try {
         return await timelineModel.create({ title, description, date, username });
     } catch (error) {
-        console.error('Timeline creation error:', error);
         return null;
     }
 };
+
+const isAdmin = (req, res, next) => {
+    if (req.session && req.session.user && req.session.user.role === 'admin') {
+        return next();
+    } else {
+        res.status(403).send('Forbidden');
+    }
+};
+
+app.get('/users', isAdmin, async (req, res) => {
+    try {
+        const usersFound = await usersModel.find({ role: 'user' });
+        res.json(usersFound);
+    } catch (error) {
+        res.status(500).json({ error: 'Could not retrieve users' });
+    }
+});
 
 process.on('uncaughtException', (err) => {
     console.error('Uncaught Exception:', err);
