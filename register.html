@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Login</title>
+  <title>Register</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -14,7 +14,7 @@
       margin: 0;
     }
 
-    .login-container {
+    .register-container {
       background-color: #fff;
       padding: 30px 40px;
       border-radius: 10px;
@@ -49,7 +49,7 @@
       margin-top: 20px;
       width: 100%;
       padding: 10px;
-      background-color: #4CAF50;
+      background-color: #2196F3;
       color: white;
       font-size: 16px;
       border: none;
@@ -58,40 +58,39 @@
     }
 
     button:hover {
-      background-color: #45a049;
+      background-color: #1976D2;
     }
 
-    .register-link {
+    .back-link {
       text-align: center;
       margin-top: 15px;
     }
 
-    .register-link a {
+    .back-link a {
       color: #007BFF;
       text-decoration: none;
       font-size: 14px;
     }
 
-    .register-link a:hover {
+    .back-link a:hover {
       text-decoration: underline;
     }
   </style>
 </head>
 <body>
-  <div class="login-container">
-    <h2>Log In</h2>
-    <form action="/login" method="POST">
+  <div class="register-container">
+    <h2>Register</h2>
+    <form action="/register" method="POST">
       <label for="username">Username</label>
       <input type="text" id="username" name="username" required>
 
       <label for="password">Password</label>
       <input type="password" id="password" name="password" required>
 
-      <button type="submit">Log In</button>
+      <button type="submit">Register</button>
     </form>
-
-    <div class="register-link">
-        <a href="/register.html" target="_self">Register here</a>
+    <div class="back-link">
+      <p><a href="/login">Back to Login</a></p>
     </div>
   </div>
 </body>

@@ -19,6 +19,7 @@
   "homepage": "https://github.com/crombout89/2537-DTC04-Pokedex#readme",
   "description": "",
   "dependencies": {
+    "bcrypt": "^5.1.1",
     "ejs": "^3.1.10",
     "express": "^5.1.0",
     "express-session": "^1.18.1",
