@@ -31,7 +31,7 @@ app.use(session({
 app.set('view engine', 'ejs');
 app.use(express.static(__dirname));
 
-// Server & DB
+// 
 const port = 3000;
 app.listen(port, () => console.log(`Server is running on http://localhost:${port}`));
 
@@ -41,39 +41,38 @@ async function connectToMongoDB() {
             serverSelectionTimeoutMS: 5000,
             socketTimeoutMS: 45000
         });
-        console.log('✅ Connected to MongoDB');
+        console.log('Connected to MongoDB Successfully');
     } catch (err) {
-        console.error('❌ MongoDB connection error:', err.message);
+        console.error('MongoDB connection error:', err.message);
     }
 }
 connectToMongoDB();
 
-// Public Routes
 app.get('/', (req, res) => res.redirect('/home'));
 
 app.get('/login', (req, res) => res.sendFile(__dirname + '/login.html'));
 
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
-    console.log('🔐 Login attempt:', username);
+    console.log('Login attempt:', username);
     try {
         const user = await usersModel.findOne({ username });
-        console.log('🔍 User found:', user);
+        console.log('User found:', user);
 
         if (
             user &&
             (await bcrypt.compare(password, user.password) || user.password === password)
         ) {
-            console.log('✅ Password matched!');
+            console.log('Password matched!');
             req.session.user = user;
             await addToTimeline('Login', 'User logged in', new Date(), user.username);
             res.redirect('/home');
         } else {
-            console.log('❌ Invalid credentials');
+            console.log('Invalid credentials');
             res.status(401).send('Invalid credentials');
         }
     } catch (err) {
-        console.error('❌ Login error:', err.message);
+        console.error('Login error:', err.message);
         res.status(500).send('Login failed');
     }
 });
@@ -90,38 +89,38 @@ app.get('/register', (req, res) => res.sendFile(__dirname + '/register.html'));
 
 app.post('/register', async (req, res) => {
     const { username, password } = req.body;
-    console.log('📥 Register request:', username);
+    console.log('Register request:', username);
     try {
         const existingUser = await usersModel.findOne({ username });
         if (existingUser) {
-            console.log('⚠️ Username already exists');
+            console.log('Username already exists');
             return res.status(400).send('Username already exists');
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
-        console.log('🔐 Hashed password:', hashedPassword);
+        console.log('Hashed password:', hashedPassword);
 
         const newUser = new usersModel({ username, password: hashedPassword });
         await newUser.save();
-        console.log('✅ New user created:', newUser);
+        console.log('New user created:', newUser);
 
         req.session.user = newUser;
         await addToTimeline('Register', 'New user registered', new Date(), username);
         res.redirect('/home');
     } catch (err) {
-        console.error('❌ Registration failed:', err);
+        console.error('Registration failed:', err);
         res.status(500).send('Registration failed');
     }
 });
 
-// ✅ Now protect all routes below
+
 const isAuthenticated = (req, res, next) => {
     if (req.session && req.session.user) return next();
     res.redirect('/login');
 };
 app.use(isAuthenticated);
 
-// Protected Routes
+
 app.get('/home', (req, res) => {
     res.render('index', {
         username: req.session.user.username,
