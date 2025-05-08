@@ -1,3 +1,4 @@
+<!-- index.ejs -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,111 +6,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Dashboard</title>
   <style>
-   
-    body {
-      font-family: Arial, sans-serif;
-      line-height: 1.6;
-      margin: 0;
-      padding: 0;
-      color: #333;
-    }
-
-    .navbar {
-      background-color: #29582b;
-      padding: 15px 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      position: sticky;
-      top: 0;
-      z-index: 1000;
-    }
-
-    .navbar-title {
-      font-size: 24px;
-      color: white;
-      font-weight: bold;
-      text-decoration: none;
-    }
-
-    .logout {
-      background-color: #f44336;
-      color: white;
-      padding: 8px 16px;
-      text-decoration: none;
-      border-radius: 4px;
-      font-weight: bold;
-      border: none;
-      cursor: pointer;
-    }
-
-    .logout:hover {
-      background-color: #d32f2f;
-    }
-
-    main {
-      padding: 20px;
-    }
-
-    h1, h2, h3 {
-      color: #2c3e50;
-    }
-
-    ul {
-      padding-left: 0;
-    }
-
-    li {
-      padding: 10px;
-      margin: 5px 0;
-      background-color: #f9f9f9;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    button {
-      padding: 8px;
-      background-color: #4CAF50;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      margin-left: 10px;
-    }
-
-    button:hover {
-      background-color: #a3c9a5;
-    }
-
-    .pokemon-container {
-      width: auto;
-      background-color: #f0f8f5;
-      padding: 20px;
-      border-radius: 8px;
-      margin-bottom: 20px;
-    }
-
-    #pokemon-section ul {
-      list-style-type: none;
-      padding: 0;
-    }
-
-    #pokemon-section ul li {
-      margin-bottom: 10px;
-    }
-
-    #pokemon-section ul li button {
-      width: 25%;
-      min-width: 120px;
-      display: block;
-      margin: 0 auto;
-    }
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; color: #333; }
+    .navbar { background-color: #29582b; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; }
+    .navbar-title { font-size: 24px; color: white; font-weight: bold; text-decoration: none; }
+    .logout { background-color: #f44336; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; font-weight: bold; border: none; cursor: pointer; }
+    .logout:hover { background-color: #d32f2f; }
+    main { padding: 20px; }
+    h1, h2 { color: #2c3e50; }
+    ul { padding-left: 0; }
+    li { padding: 10px; margin: 5px 0; background-color: #f9f9f9; border: 1px solid #ddd; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; }
+    button { padding: 8px 20px; margin-top: 25px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; margin-left: 10px; }
+    button:hover { background-color: #a3c9a5; }
+    .pokemon-container { background-color: #f0f8f5; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+    #pokemon-section ul { list-style-type: none; padding: 0; display: flex; flex-wrap: wrap; gap: 10px; }
+    #pokemon-section ul li { flex: 0 0 calc(50% - 10px); box-sizing: border-box; display: flex; flex-direction: column; align-items: center; }
+    #pokemon-section ul li img { margin-bottom: 5px; }
+    #controls { margin-bottom: 20px; }
+    #controls input, #controls select { padding: 5px; margin-right: 10px; }
   </style>
 </head>
-
 <body>
   <div class="navbar">
     <a href="/home" class="navbar-title">My Dashboard</a>
@@ -118,21 +33,41 @@
 
   <main>
     <h1>Dashboard</h1>
-    <p>This is your protected dashboard page. Only authenticated users can see this content.</p>
-    <p>You are currently logged in as <strong><%= username %></strong>.</p>
+    <p>You are logged in as <strong><%= username %></strong>.</p>
 
-    <!-- conditional rendering -->
-    <% if (role == "admin") { %>
-      <h1>Admin Page</h1>
-      <p>Welcome, Admin!</p>
-      <p>Here is a list of all users:</p>
+    <% if (role === "admin") { %>
+      <h2>Admin Page</h2>
       <ul id="user-list"></ul>
-    <% } else if (role == "user") { %>
-
+    <% } else if (role === "user") { %>
       <div class="pokemon-container">
-        <div id="pokemon-section">
-          <h2>Add a Pokémon to Favorites:</h2>
+        <h2>Pokémon List</h2>
+        <div id="controls">
+          <input type="text" id="searchInput" placeholder="Search Pokémon..." />
+          <select id="typeFilter">
+            <option value="">All Types</option>
+            <option value="grass">Grass</option>
+            <option value="fire">Fire</option>
+            <option value="water">Water</option>
+            <option value="electric">Electric</option>
+            <option value="normal">Normal</option>
+            <option value="fighting">Fighting</option>
+            <option value="psychic">Psychic</option>
+            <option value="rock">Rock</option>
+            <option value="ground">Ground</option>
+            <option value="ghost">Ghost</option>
+            <option value="dragon">Dragon</option>
+            <option value="dark">Dark</option>
+            <option value="fairy">Fairy</option>
+          </select>
+          <select id="sortSelect">
+            <option value="az">Sort by Name: A–Z</option>
+            <option value="za">Sort by Name: Z–A</option>
+            <option value="type">Sort by Type</option>
+          </select>
+          <button id="prevPage">Previous</button>
+          <button id="nextPage">Next</button>
         </div>
+        <div id="pokemon-section"></div>
       </div>
 
       <h2>Favorites List</h2>
@@ -140,177 +75,175 @@
 
       <h2>Timeline</h2>
       <ul id="timeline-list"></ul>
-
     <% } %>
   </main>
 
   <script>
-   
     const role = "<%= role %>";
     if (role === "admin") {
-      fetch("/users", { method: "GET" })
-        .then((response) => response.json())
-        .then((data) => {
-          const userList = document.getElementById("user-list");
-          data.forEach((user) => {
+      fetch("/users")
+        .then(res => res.json())
+        .then(users => {
+          const list = document.getElementById("user-list");
+          list.innerHTML = "";
+          users.forEach(user => {
             const li = document.createElement("li");
-            li.innerText = user.username;
-            userList.appendChild(li);
+            li.textContent = user.username;
+            list.appendChild(li);
           });
-        })
-        .catch((error) => console.error("Error fetching users:", error));
+        });
     }
 
     if (role === "user") {
       let currentFavorites = [];
+      let offset = 0;
 
       const fetchFavorites = () =>
-        fetch("/favorites", { method: "GET" })
-          .then(response => response.json())
+        fetch("/favorites")
+          .then(res => res.json())
           .then(data => {
-            currentFavorites = data.map(fav => fav.name.toLowerCase());
-            const favoritesList = document.getElementById("favorites-list");
-            favoritesList.innerHTML = "";
-            data.forEach(favorite => {
-              const li = document.createElement("li");
-
-              const nameDiv = document.createElement("div");
-              nameDiv.textContent = favorite.name;
-
-              const deleteButton = document.createElement("button");
-              deleteButton.textContent = "Delete";
-              deleteButton.onclick = () => deleteFavorite(favorite._id);
-
-              li.appendChild(nameDiv);
-              li.appendChild(deleteButton);
-              favoritesList.appendChild(li);
-            });
-
-            renderPokemonButtons();
-          })
-          .catch(error => console.error("Error fetching favorites:", error));
-
-      const deleteFavorite = (id) => {
-        if (confirm("Are you sure you want to delete this favorite?")) {
-          fetch(`/deleteFavorite/${id}`, {
-            method: "DELETE"
-          })
-          .then(response => response.json())
-          .then(result => {
-            if (result.success) {
-              fetchFavorites();
-              fetchTimeline();
-            } else {
-              alert("Failed to delete favorite.");
-            }
-          })
-          .catch(error => {
-            console.error("Error deleting favorite:", error);
-            alert("An error occurred while deleting the favorite.");
+            currentFavorites = data.map(f => f.name.toLowerCase());
+            renderFavorites(data);
+            renderPokemonList();
           });
-        }
+
+      const renderFavorites = (favorites) => {
+        const list = document.getElementById("favorites-list");
+        list.innerHTML = "";
+        favorites.forEach(fav => {
+          const li = document.createElement("li");
+          li.textContent = fav.name;
+          const delBtn = document.createElement("button");
+          delBtn.textContent = "Remove";
+          delBtn.onclick = () => {
+            fetch(`/deleteFavorite/${fav._id}`, { method: "DELETE" })
+              .then(res => res.json())
+              .then(result => {
+                if (result.success) {
+                  fetchFavorites();
+                  fetchTimeline();
+                }
+              });
+          };
+          li.appendChild(delBtn);
+          list.appendChild(li);
+        });
       };
 
-      const fetchTimeline = () =>
-        fetch("/timeline", { method: "GET" })
-          .then(response => response.json())
+      const renderPokemonList = () => {
+        const section = document.getElementById("pokemon-section");
+        section.innerHTML = "Loading...";
+        fetch(`https://pokeapi.co/api/v2/pokemon?limit=20&offset=${offset}`)
+          .then(res => res.json())
           .then(data => {
-            const timelineList = document.getElementById("timeline-list");
-            timelineList.innerHTML = "";
+            Promise.all(data.results.map(p => fetch(p.url).then(res => res.json())))
+              .then(fullDetails => {
+                let filtered = fullDetails;
 
-            data.forEach(event => {
-              const li = document.createElement("li");
-              li.innerHTML = `
-                <div style="flex: 1;">
-                  <strong>${event.title}</strong>: ${event.description}
-                  <br><small>${new Date(event.date).toLocaleString()}</small>
-                </div>
-              `;
-              const deleteButton = document.createElement("button");
-              deleteButton.textContent = "Delete";
-              deleteButton.onclick = () => deleteTimeline(event._id);
-
-              li.appendChild(deleteButton);
-              timelineList.prepend(li);
-            });
-          })
-          .catch(error => console.error("Error fetching timeline:", error));
-
-      const deleteTimeline = (id) => {
-        if (confirm("Are you sure you want to delete this entry?")) {
-          fetch(`/deleteTimeline/${id}`, { method: "DELETE" })
-            .then(response => response.json())
-            .then(result => {
-              if (result.success) {
-                fetchTimeline();
-              } else {
-                alert("Failed to delete entry.");
-              }
-            })
-            .catch(error => {
-              console.error("Error deleting entry:", error);
-              alert("An error occurred while deleting the entry.");
-            });
-        }
-      };
-
-      const renderPokemonButtons = () => {
-        const pokemonSection = document.getElementById("pokemon-section");
-        pokemonSection.innerHTML = "<h2>Add a Pokémon to Favorites:</h2>";
-
-        fetch("https://pokeapi.co/api/v2/pokemon?limit=10")
-          .then(response => response.json())
-          .then(data => {
-            const pokemonList = document.createElement("ul");
-
-            data.results.forEach(pokemon => {
-              const li = document.createElement("li");
-
-              const button = document.createElement("button");
-              button.textContent = pokemon.name;
-
-              if (currentFavorites.includes(pokemon.name.toLowerCase())) {
-                button.disabled = true;
-                button.style.backgroundColor = "#ccc";
-                button.style.cursor = "not-allowed";
-              }
-
-              button.addEventListener("click", () => {
-                const pokemonName = pokemon.name.toLowerCase();
-
-                if (currentFavorites.includes(pokemonName)) {
-                  alert(`${pokemon.name} is already in your favorites!`);
-                  button.disabled = true;
-                  button.style.backgroundColor = "#ccc";
-                  button.style.cursor = "not-allowed";
-                  return;
+                const searchValue = document.getElementById("searchInput").value.toLowerCase();
+                if (searchValue) {
+                  filtered = filtered.filter(p => p.name.toLowerCase().includes(searchValue));
                 }
 
-                fetch(`/addFavorite/${pokemonName}`, { method: "GET" })
-                  .then(response => {
-                    if (response.ok) {
-                      alert(`${pokemon.name} added to your favorites!`);
-                      currentFavorites.push(pokemonName);
-                      button.disabled = true;
-                      button.style.backgroundColor = "#ccc";
-                      button.style.cursor = "not-allowed";
-                      fetchFavorites();
-                      fetchTimeline();
-                    } else {
-                      alert(`Failed to add ${pokemon.name} to favorites.`);
-                    }
-                  })
-                  .catch(error => console.error("Error adding favorite:", error));
+                const selectedType = document.getElementById("typeFilter").value;
+                if (selectedType) {
+                  filtered = filtered.filter(p => p.types.some(t => t.type.name === selectedType));
+                }
+
+                const sortOption = document.getElementById("sortSelect").value;
+                if (sortOption === "az") {
+                  filtered.sort((a, b) => a.name.localeCompare(b.name));
+                } else if (sortOption === "za") {
+                  filtered.sort((a, b) => b.name.localeCompare(a.name));
+                } else if (sortOption === "type") {
+                  filtered.sort((a, b) =>
+                    (a.types[0]?.type.name || "").localeCompare(b.types[0]?.type.name || "")
+                  );
+                }
+
+                const ul = document.createElement("ul");
+                filtered.forEach(p => {
+                  const li = document.createElement("li");
+
+                  const img = document.createElement("img");
+                  img.src = p.sprites.front_default;
+                  img.alt = p.name;
+                  img.width = 96;
+
+                  const info = document.createElement("div");
+                  info.textContent = `${p.name} (${p.types.map(t => t.type.name).join(", ")})`;
+
+                  const btn = document.createElement("button");
+                  btn.textContent = "Add";
+                  if (currentFavorites.includes(p.name.toLowerCase())) {
+                    btn.disabled = true;
+                    btn.style.backgroundColor = "#ccc";
+                    btn.style.cursor = "not-allowed";
+                  }
+
+                  btn.onclick = () => {
+                    fetch('/addFavorite', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ name: p.name })
+                    }).then(res => {
+                      if (res.ok) {
+                        fetchFavorites();
+                        fetchTimeline();
+                      }
+                    });
+                  };
+
+                  li.appendChild(img);
+                  li.appendChild(info);
+                  li.appendChild(btn);
+                  ul.appendChild(li);
+                });
+
+                section.innerHTML = "";
+                section.appendChild(ul);
               });
-
-              li.appendChild(button);
-              pokemonList.appendChild(li);
-            });
-
-            pokemonSection.appendChild(pokemonList);
-          })
-          .catch(error => console.error("Error fetching Pokémon:", error));
+          });
       };
+
+      document.getElementById("prevPage").onclick = () => {
+        if (offset >= 20) {
+          offset -= 20;
+          renderPokemonList();
+        }
+      };
+
+      document.getElementById("nextPage").onclick = () => {
+        offset += 20;
+        renderPokemonList();
+      };
+
+      document.getElementById("searchInput").oninput = renderPokemonList;
+      document.getElementById("typeFilter").onchange = renderPokemonList;
+      document.getElementById("sortSelect").onchange = renderPokemonList;
+
+      const fetchTimeline = () =>
+        fetch("/timeline")
+          .then(res => res.json())
+          .then(data => {
+            const list = document.getElementById("timeline-list");
+            list.innerHTML = "";
+            data.forEach(entry => {
+              const li = document.createElement("li");
+              li.innerHTML = `<strong>${entry.title}</strong>: ${entry.description}<br><small>${new Date(entry.date).toLocaleString()}</small>`;
+              const btn = document.createElement("button");
+              btn.textContent = "Delete";
+              btn.onclick = () => {
+                fetch(`/deleteTimeline/${entry._id}`, { method: "DELETE" })
+                  .then(res => res.json())
+                  .then(result => {
+                    if (result.success) fetchTimeline();
+                  });
+              };
+              li.appendChild(btn);
+              list.appendChild(li);
+            });
+          });
 
       fetchFavorites();
       fetchTimeline();
