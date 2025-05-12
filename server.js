@@ -7,7 +7,6 @@ const { ObjectId } = require('mongoose').Types;
 
 const app = express();
 
-// Schemas
 const favoritesSchema = new mongoose.Schema({ name: String, username: String });
 const timelineSchema = new mongoose.Schema({ title: String, description: String, date: Date, username: String });
 const userSchema = new mongoose.Schema({
@@ -174,7 +173,6 @@ app.delete('/deleteTimeline/:id', async (req, res) => {
     }
 });
 
-// Admin-only routes
 const isAdmin = (req, res, next) => {
     if (req.session && req.session.user && req.session.user.role === 'admin') {
         return next();
@@ -185,7 +183,7 @@ const isAdmin = (req, res, next) => {
 
 app.get('/users', isAdmin, async (req, res) => {
     try {
-        const usersFound = await usersModel.find({ role: 'user' });
+        const usersFound = await usersModel.find({ role: 'user' }, 'username role');
         res.json(usersFound);
     } catch (error) {
         res.status(500).json({ error: 'Could not retrieve users' });
@@ -204,7 +202,27 @@ app.post('/deleteUser', isAdmin, async (req, res) => {
     }
 });
 
-// Timeline utility
+app.post('/editUser', isAdmin, async (req, res) => {
+    try {
+        const { userId, newUsername, newPassword } = req.body;
+
+        if (!ObjectId.isValid(userId)) {
+            return res.status(400).send('Invalid user ID');
+        }
+
+        const update = {};
+        if (newUsername) update.username = newUsername;
+        if (newPassword) update.password = await bcrypt.hash(newPassword, 10);
+
+        await usersModel.updateOne({ _id: new ObjectId(userId) }, { $set: update });
+        res.redirect('/users');
+    } catch (error) {
+        console.error('Edit user error:', error);
+        res.status(500).send('Could not edit user');
+    }
+});
+
+
 const addToTimeline = async (title, description, date, username) => {
     try {
         return await timelineModel.create({ title, description, date, username });
