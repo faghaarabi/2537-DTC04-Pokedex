@@ -193,7 +193,6 @@ app.get('/users', isAdmin, async (req, res) => {
     }
 });
 
-// ✅ NEW FIXED ROUTE for deleting a user (called from frontend JS)
 app.delete('/deleteUser/:id', isAdmin, async (req, res) => {
     try {
         const userId = req.params.id;
@@ -210,6 +209,32 @@ app.delete('/deleteUser/:id', isAdmin, async (req, res) => {
     } catch (error) {
         console.error('Delete user error:', error);
         res.status(500).json({ success: false, error: 'Could not delete user' });
+    }
+});
+
+app.put('/editUser/:id', isAdmin, async (req, res) => {
+    try {
+        const userId = req.params.id;
+        const { username, role } = req.body;
+
+        if (!ObjectId.isValid(userId)) {
+            return res.status(400).json({ success: false, error: 'Invalid user ID' });
+        }
+
+        const update = {};
+        if (username) update.username = username;
+        if (role && ['admin', 'user'].includes(role)) update.role = role;
+
+        const result = await usersModel.updateOne({ _id: new ObjectId(userId) }, { $set: update });
+
+        if (result.matchedCount === 0) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Edit user error:', error);
+        res.status(500).json({ success: false, error: 'Could not update user' });
     }
 });
 
