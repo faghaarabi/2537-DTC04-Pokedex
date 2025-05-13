@@ -60,3 +60,17 @@ body {
 .screen-left {
     width: 50%;
 }
+.pokemon-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+  
+  .pokemon-card {
+    background-color: #fff;
+    padding: 16px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    text-align: center;
+  }
+  

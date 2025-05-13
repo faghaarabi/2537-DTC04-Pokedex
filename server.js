@@ -6,7 +6,7 @@ const { ObjectId } = require('mongoose').Types;
 
 const app = express();
 
-// MongoDB Schemas
+// Schemas
 const favoritesSchema = new mongoose.Schema({ name: String, username: String });
 const timelineSchema = new mongoose.Schema({ title: String, description: String, date: Date, username: String });
 const userSchema = new mongoose.Schema({
@@ -19,7 +19,6 @@ const favoritesModel = mongoose.model('favorites', favoritesSchema);
 const timelineModel = mongoose.model('timeline', timelineSchema);
 const usersModel = mongoose.model('users', userSchema);
 
-// Middleware setup
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(session({
@@ -31,7 +30,6 @@ app.use(session({
 app.set('view engine', 'ejs');
 app.use(express.static(__dirname));
 
-// 
 const port = 3000;
 app.listen(port, () => console.log(`Server is running on http://localhost:${port}`));
 
@@ -41,7 +39,7 @@ async function connectToMongoDB() {
             serverSelectionTimeoutMS: 5000,
             socketTimeoutMS: 45000
         });
-        console.log('Connected to MongoDB Successfully');
+        console.log('Connected to MongoDB');
     } catch (err) {
         console.error('MongoDB connection error:', err.message);
     }
@@ -49,31 +47,38 @@ async function connectToMongoDB() {
 connectToMongoDB();
 
 app.get('/', (req, res) => res.redirect('/home'));
-
 app.get('/login', (req, res) => res.sendFile(__dirname + '/login.html'));
+app.get('/register', (req, res) => res.sendFile(__dirname + '/register.html'));
 
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
-    console.log('Login attempt:', username);
     try {
         const user = await usersModel.findOne({ username });
-        console.log('User found:', user);
-
-        if (
-            user &&
-            (await bcrypt.compare(password, user.password) || user.password === password)
-        ) {
-            console.log('Password matched!');
+        if (user && await bcrypt.compare(password, user.password) || user.password === password) {
             req.session.user = user;
             await addToTimeline('Login', 'User logged in', new Date(), user.username);
             res.redirect('/home');
         } else {
-            console.log('Invalid credentials');
             res.status(401).send('Invalid credentials');
         }
     } catch (err) {
-        console.error('Login error:', err.message);
         res.status(500).send('Login failed');
+    }
+});
+
+app.post('/register', async (req, res) => {
+    const { username, password } = req.body;
+    try {
+        const existingUser = await usersModel.findOne({ username });
+        if (existingUser) return res.status(400).send('Username already exists');
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const newUser = new usersModel({ username, password: hashedPassword });
+        await newUser.save();
+        req.session.user = newUser;
+        await addToTimeline('Register', 'New user registered', new Date(), username);
+        res.redirect('/home');
+    } catch (err) {
+        res.status(500).send('Registration failed');
     }
 });
 
@@ -85,41 +90,12 @@ app.get('/logout', (req, res) => {
     });
 });
 
-app.get('/register', (req, res) => res.sendFile(__dirname + '/register.html'));
-
-app.post('/register', async (req, res) => {
-    const { username, password } = req.body;
-    console.log('Register request:', username);
-    try {
-        const existingUser = await usersModel.findOne({ username });
-        if (existingUser) {
-            console.log('Username already exists');
-            return res.status(400).send('Username already exists');
-        }
-
-        const hashedPassword = await bcrypt.hash(password, 10);
-        console.log('Hashed password:', hashedPassword);
-
-        const newUser = new usersModel({ username, password: hashedPassword });
-        await newUser.save();
-        console.log('New user created:', newUser);
-
-        req.session.user = newUser;
-        await addToTimeline('Register', 'New user registered', new Date(), username);
-        res.redirect('/home');
-    } catch (err) {
-        console.error('Registration failed:', err);
-        res.status(500).send('Registration failed');
-    }
-});
-
-
 const isAuthenticated = (req, res, next) => {
     if (req.session && req.session.user) return next();
     res.redirect('/login');
 };
-app.use(isAuthenticated);
 
+app.use(isAuthenticated);
 
 app.get('/home', (req, res) => {
     res.render('index', {
@@ -137,12 +113,14 @@ app.get('/favorites', async (req, res) => {
     }
 });
 
-app.get('/addFavorite/:favorite', async (req, res) => {
+app.post('/addFavorite', async (req, res) => {
     try {
-        const { favorite } = req.params;
+        const { name } = req.body;
         const username = req.session.user.username;
-        const result = await favoritesModel.create({ name: favorite, username });
-        await addToTimeline('Added Favorite', favorite, new Date(), username);
+        const exists = await favoritesModel.findOne({ name, username });
+        if (exists) return res.status(400).json({ error: 'Already in favorites' });
+        const result = await favoritesModel.create({ name, username });
+        await addToTimeline('Added Favorite', name, new Date(), username);
         res.json(result);
     } catch (error) {
         res.status(500).json({ error: 'Could not add favorite' });
@@ -172,7 +150,7 @@ app.get('/timeline', async (req, res) => {
     try {
         const timelineFound = await timelineModel
             .find({ username: req.session.user.username })
-            .sort({ date: 1 });
+            .sort({ date: -1 });
         res.json(timelineFound);
     } catch (error) {
         res.status(500).json({ error: 'Could not retrieve timeline' });
@@ -197,14 +175,7 @@ app.delete('/deleteTimeline/:id', async (req, res) => {
     }
 });
 
-const addToTimeline = async (title, description, date, username) => {
-    try {
-        return await timelineModel.create({ title, description, date, username });
-    } catch (error) {
-        return null;
-    }
-};
-
+// Admin-only routes
 const isAdmin = (req, res, next) => {
     if (req.session && req.session.user && req.session.user.role === 'admin') {
         return next();
@@ -222,7 +193,60 @@ app.get('/users', isAdmin, async (req, res) => {
     }
 });
 
-// Error Handling
+// ✅ NEW FIXED ROUTE for deleting a user (called from frontend JS)
+app.delete('/deleteUser/:id', isAdmin, async (req, res) => {
+    try {
+        const userId = req.params.id;
+        if (!ObjectId.isValid(userId)) {
+            return res.status(400).json({ success: false, error: 'Invalid user ID' });
+        }
+
+        const result = await usersModel.deleteOne({ _id: new ObjectId(userId) });
+        if (result.deletedCount === 0) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Delete user error:', error);
+        res.status(500).json({ success: false, error: 'Could not delete user' });
+    }
+});
+app.put('/editUser/:id', isAdmin, async (req, res) => {
+    try {
+        const userId = req.params.id;
+        const { username, role } = req.body;
+
+        if (!ObjectId.isValid(userId)) {
+            return res.status(400).json({ success: false, error: 'Invalid user ID' });
+        }
+
+        const update = {};
+        if (username) update.username = username;
+        if (role && ['admin', 'user'].includes(role)) update.role = role;
+
+        const result = await usersModel.updateOne({ _id: new ObjectId(userId) }, { $set: update });
+        if (result.matchedCount === 0) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Edit user error:', error);
+        res.status(500).json({ success: false, error: 'Could not update user' });
+    }
+});
+
+
+// Timeline utility
+const addToTimeline = async (title, description, date, username) => {
+    try {
+        return await timelineModel.create({ title, description, date, username });
+    } catch (error) {
+        return null;
+    }
+};
+
 process.on('uncaughtException', (err) => {
     console.error('Uncaught Exception:', err);
 });
