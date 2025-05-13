@@ -56,59 +56,44 @@
       border: 1px solid #ddd;
       border-radius: 4px;
       display: flex;
+      flex-direction: row;
+      align-items: center;
       justify-content: space-between;
       align-items: center;
-      flex-wrap: wrap;
     }
     button {
-      padding: 8px;
+      padding: 6px 10px;
       background-color: #4CAF50;
       color: white;
       border: none;
       border-radius: 4px;
       cursor: pointer;
-      margin-left: 10px;
     }
     button:hover {
       background-color: #a3c9a5;
     }
-    input, select {
-      padding: 6px;
-      margin-right: 10px;
-    }
+
     .pokemon-container {
       background-color: #f0f8f5;
       padding: 20px;
       border-radius: 8px;
       margin-bottom: 20px;
     }
+
     #pokemon-section ul {
       list-style-type: none;
       padding: 0;
     }
+
     #pokemon-section ul li {
       margin-bottom: 10px;
-      text-align: center;
     }
-    #pokemon-section ul li img {
+
+    #pokemon-section ul li button {
+      width: 25%;
+      min-width: 120px;
       display: block;
-      margin: 0 auto 5px;
-    }
-    #controls {
-      margin-bottom: 20px;
-    }
-    #controls input, #controls select {
-      padding: 5px;
-      margin-right: 10px;
-    }
-    #favorites-list li {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px;
-      background: #f5f5f5;
-      margin-bottom: 8px;
-      border-radius: 6px;
+      margin: 0 auto;
     }
   </style>
 </head>
@@ -176,57 +161,11 @@
           list.innerHTML = "";
           users.forEach(user => {
             const li = document.createElement("li");
-
-            const usernameInput = document.createElement("input");
-            usernameInput.value = user.username;
-
-            const roleSelect = document.createElement("select");
-            ["user", "admin"].forEach(opt => {
-              const option = document.createElement("option");
-              option.value = opt;
-              option.textContent = opt;
-              if (user.role === opt) option.selected = true;
-              roleSelect.appendChild(option);
-            });
-
-            const editButton = document.createElement("button");
-            editButton.textContent = "Edit";
-            editButton.onclick = () => {
-              fetch(`/editUser/${user._id}`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  username: usernameInput.value,
-                  role: roleSelect.value
-                })
-              })
-              .then(res => res.json())
-              .then(result => {
-                if (result.success) {
-                  alert("User updated!");
-                } else {
-                  alert("Update failed");
-                }
-              });
-            };
-
-            const deleteButton = document.createElement("button");
-            deleteButton.textContent = "Delete";
-            deleteButton.onclick = () => {
-              fetch(`/deleteUser/${user._id}`, { method: "DELETE" })
-                .then(res => res.json())
-                .then(result => {
-                  if (result.success) li.remove();
-                });
-            };
-
-            li.appendChild(usernameInput);
-            li.appendChild(roleSelect);
-            li.appendChild(editButton);
-            li.appendChild(deleteButton);
-            list.appendChild(li);
+            li.innerText = user.username;
+            userList.appendChild(li);
           });
-        });
+        })
+        .catch((error) => console.error("Error fetching users:", error));
     }
 
     if (role === "user") {
