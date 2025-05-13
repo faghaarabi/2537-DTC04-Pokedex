@@ -1,4 +1,3 @@
-// === server.js ===
 const express = require('express');
 const session = require('express-session');
 const mongoose = require('mongoose');
@@ -7,7 +6,7 @@ const { ObjectId } = require('mongoose').Types;
 
 const app = express();
 
-// MongoDB Schemas
+// Schemas
 const favoritesSchema = new mongoose.Schema({ name: String, username: String });
 const timelineSchema = new mongoose.Schema({ title: String, description: String, date: Date, username: String });
 const userSchema = new mongoose.Schema({
@@ -55,13 +54,7 @@ app.post('/login', async (req, res) => {
     const { username, password } = req.body;
     try {
         const user = await usersModel.findOne({ username });
-        console.log('User found:', user);
-
-        if (
-            user &&
-            (await bcrypt.compare(password, user.password) || user.password === password)
-        ) {
-            console.log('Password matched!');
+        if (user && await bcrypt.compare(password, user.password) || user.password === password) {
             req.session.user = user;
             await addToTimeline('Login', 'User logged in', new Date(), user.username);
             res.redirect('/home');
@@ -157,7 +150,7 @@ app.get('/timeline', async (req, res) => {
     try {
         const timelineFound = await timelineModel
             .find({ username: req.session.user.username })
-            .sort({ date: 1 });
+            .sort({ date: -1 });
         res.json(timelineFound);
     } catch (error) {
         res.status(500).json({ error: 'Could not retrieve timeline' });
@@ -182,14 +175,7 @@ app.delete('/deleteTimeline/:id', async (req, res) => {
     }
 });
 
-const addToTimeline = async (title, description, date, username) => {
-    try {
-        return await timelineModel.create({ title, description, date, username });
-    } catch (error) {
-        return null;
-    }
-};
-
+// Admin-only routes
 const isAdmin = (req, res, next) => {
     if (req.session && req.session.user && req.session.user.role === 'admin') {
         return next();
@@ -200,14 +186,42 @@ const isAdmin = (req, res, next) => {
 
 app.get('/users', isAdmin, async (req, res) => {
     try {
-        const usersFound = await usersModel.find({ role: 'user' }, 'username role');
+        const usersFound = await usersModel.find({ role: 'user' });
         res.json(usersFound);
     } catch (error) {
         res.status(500).json({ error: 'Could not retrieve users' });
     }
 });
 
-// Error Handling
+// ✅ NEW FIXED ROUTE for deleting a user (called from frontend JS)
+app.delete('/deleteUser/:id', isAdmin, async (req, res) => {
+    try {
+        const userId = req.params.id;
+        if (!ObjectId.isValid(userId)) {
+            return res.status(400).json({ success: false, error: 'Invalid user ID' });
+        }
+
+        const result = await usersModel.deleteOne({ _id: new ObjectId(userId) });
+        if (result.deletedCount === 0) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Delete user error:', error);
+        res.status(500).json({ success: false, error: 'Could not delete user' });
+    }
+});
+
+// Timeline utility
+const addToTimeline = async (title, description, date, username) => {
+    try {
+        return await timelineModel.create({ title, description, date, username });
+    } catch (error) {
+        return null;
+    }
+};
+
 process.on('uncaughtException', (err) => {
     console.error('Uncaught Exception:', err);
 });
